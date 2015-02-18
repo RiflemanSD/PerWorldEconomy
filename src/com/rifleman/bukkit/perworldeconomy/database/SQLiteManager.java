@@ -36,24 +36,22 @@ public class SQLiteManager {
         
         openDB("EcoDB", false);
         
-        String sql;
+        String[] sql = new String[5];
         
-        /*sql = "INSERT INTO " + g1 + " (ID,playerName,money) "
-                    + "VALUES (1, 'Paul', 10.0);";
-        insert(sql);
-        sql = "INSERT INTO " + g1 + " (ID,playerName,money) "
-                    + "VALUES (2, 'lakis', 51.5);";
-        insert(sql);
-        sql = "INSERT INTO " + g1 + " (ID,playerName,money) "
-                    + "VALUES (3, 'rifleman', 67);";
-        insert(sql);
+        sql[0] = this.insertPlayerQuery(g2, 1, "rifleman", 10);
+        sql[1] = this.insertPlayerQuery(g2, 2, "Rifleman", 10);
+        sql[2] = this.insertPlayerQuery(g2, 3, "kotes", 10);
+        sql[3] = this.insertPlayerQuery(g2, 4, "pezo", 10);
+        sql[4] = this.updateMoneyQuery(g2, "rifleman", 40);
         
-        sql = "UPDATE " + g1 + " set money = 5000.00 where playerName='lakis';";
-        insert(sql);*/
+        this.executeUpdates(sql);
         
-        String r = selectALL(g1);
+        String eq = this.getMoneyQuery(g2, "rifleman");
         
-        System.out.println(r);
+        System.out.println(this.executeGetMoneyQ(eq));
+        
+        System.out.println(this.selectALL(g1));
+        System.out.println(this.selectALL(g2));
         
         commit();
         close();
@@ -102,30 +100,49 @@ public class SQLiteManager {
     INSERT, UPDATE, DELETE
     */
     public int executeUpdates(String... querys) {
+        for (String query: querys) {
+            try {
+                Statement stmt = null;
+                stmt = c.createStatement();
+                stmt.executeUpdate(query);
+
+                stmt.close();
+
+            } catch (SQLException ex) {
+                Logger.getLogger(SQLiteManager.class.getName()).log(Level.SEVERE, null, ex);
+
+                //return DBData.ERROR_Statement;
+            }   
+        }
+        return DBData.NO_ERROR;
+    }
+    public float executeGetMoneyQ(String query) {
+        float money = -1;
         try {
             Statement stmt = null;
             stmt = c.createStatement();
-            
-            for (String query: querys) {
-                stmt.executeUpdate(query);
-            }
+            //stmt.executeUpdate(query);
+            ResultSet rs = stmt.executeQuery(query);
+            money = rs.getFloat(gColumns[2]);
+            rs.close();
             
             stmt.close();
             
-            return DBData.NO_ERROR;
+            //return DBData.NO_ERROR;
         } catch (SQLException ex) {
             Logger.getLogger(SQLiteManager.class.getName()).log(Level.SEVERE, null, ex);
             
-            return DBData.ERROR_Statement;
+            //return DBData.ERROR_Statement;
         }
+        
+        return money;
     }
-    
     public String executeGroupQuery(String query) {
         String result = "";
         try {
             Statement stmt = null;
             stmt = c.createStatement();
-            stmt.executeUpdate(query);
+            //stmt.executeUpdate(query);
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
                 int id = rs.getInt(gColumns[0]);
@@ -148,20 +165,22 @@ public class SQLiteManager {
         return result;
     }
     
-    public void createTable(String tableName) {
+    public int createTable(String tableName, String... columns) {
         Statement stmt = null;
         try {
             stmt = c.createStatement();
             String sql = "CREATE TABLE " + tableName
-                    + " (ID INT PRIMARY KEY NOT NULL,"
-                    + " playerName TEXT NOT NULL, "
-                    + " money REAL NOT NULL)";
+                    + " (" + columns[0] + " INT PRIMARY KEY NOT NULL,"
+                    + " " + columns[1] + " TEXT NOT NULL, "
+                    + " " + columns[2] + " REAL NOT NULL)";
             stmt.executeUpdate(sql);
             stmt.close();
             
-            System.out.println("Table created successfully");
+            return DBData.NO_ERROR;
         } catch (Exception e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage() + ", " + e.hashCode());
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            
+            return DBData.ERROR_Statement;
         }
     }
 
@@ -171,6 +190,18 @@ public class SQLiteManager {
         return this.executeGroupQuery("SELECT * FROM " + tableName + ";");
     }
     
+    public String insertPlayerQuery(String tableName, int id, String player, double money) {
+        return "INSERT INTO " + tableName + " (" + this.gColumns[0] + "," + this.gColumns[1] + "," + this.gColumns[2] + ") "
+                    + "VALUES (" + id + ", '" + player + "', " + money + ");";
+    }
+    
+    public String updateMoneyQuery(String tableName, String player, double money) {
+        return "UPDATE " + tableName + " set money = " + money + " where playerName='" + player + "';";
+    }
+    
+    public String getMoneyQuery(String tableName, String player) {
+        return "SELECT money FROM " + tableName + " WHERE playerName='" + player + "';";
+    }
     
     public static void main(String args[]) {
         new SQLiteManager();
