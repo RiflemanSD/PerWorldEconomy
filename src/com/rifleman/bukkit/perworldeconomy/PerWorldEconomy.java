@@ -44,6 +44,8 @@ public class PerWorldEconomy  extends JavaPlugin {
         server = this.getServer();
         bs = server.getScheduler();
         
+        
+        
         log.info(PluginData.MESSAGE_ENABLE);
     }
     
