@@ -1,0 +1,10 @@
+name: PerWorldEconomy
+main: com.rifleman.bukkit.perworldeconomy.PerWorldEconomy
+version: 0.0.1
+author: RiflemanCSD
+commands:
+  pwe:
+    description: 
+    usage: |
+           /<command>
+  
